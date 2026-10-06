@@ -32,7 +32,7 @@ Once the script reports success, visit `http://maazwedstoshiba.work.gd`. Then en
 bash deploy/https.sh
 ```
 
-This installs Certbot if needed and prompts for an email address and certificate service terms acceptance. The secure URL is `https://maazwedstoshiba.work.gd`. A provider-level firewall must permit ports 80 and 443. Subsequent invitation deployments preserve the domain's HTTPS configuration.
+This requires Certbot and prompts for an email address and certificate service terms acceptance. It uses webroot validation rather than the Nginx plugin: only `wedding-invitation.conf` is changed. It does not edit the shared nginx.conf, other virtual hosts, or firewall rules. A graceful Nginx reload applies the tested wedding configuration without restarting the service. The secure URL is `https://maazwedstoshiba.work.gd`. A provider-level firewall must permit ports 80 and 443. Subsequent invitation deployments preserve the domain's HTTPS configuration.
 
 For subsequent updates:
 
