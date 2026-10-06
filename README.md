@@ -16,7 +16,7 @@ Names, dates and venue are configured in `dist/invitation.js`. Text and fallback
 
 ## Ubuntu server deployment
 
-The installer expects an existing, running Nginx installation. It serves this invitation on **port 8088**, leaving existing port 80/443 virtual hosts untouched. If port 8088 already belongs to another service, it stops. If UFW is active, it opens only the selected invitation port.
+The installer expects an existing, running Nginx installation. It creates a separate virtual host for **maazwedstoshiba.work.gd** on port 80 and leaves other sites untouched. DNS must point to `136.244.85.226`. If UFW is active, it permits HTTP. A different domain can be supplied through `INVITATION_DOMAIN`.
 
 From the authenticated server terminal:
 
@@ -26,7 +26,13 @@ cd /root/WeddingInvitation
 bash deploy/install.sh
 ```
 
-Once the script reports success, visit `http://136.244.85.226:8088`. A provider-level firewall must also permit the selected port. A domain and HTTPS can be configured separately when a domain is supplied.
+Once the script reports success, visit `http://maazwedstoshiba.work.gd`. Then enable HTTPS:
+
+```bash
+bash deploy/https.sh
+```
+
+This installs Certbot if needed and prompts for an email address and certificate service terms acceptance. The secure URL is `https://maazwedstoshiba.work.gd`. A provider-level firewall must permit ports 80 and 443. Subsequent invitation deployments preserve the domain's HTTPS configuration.
 
 For subsequent updates:
 
@@ -36,7 +42,7 @@ git pull --ff-only
 bash deploy/install.sh
 ```
 
-The installer creates versioned releases in `/var/www/wedding-invitation/releases`, switches a `current` symlink, tests Nginx, then reloads. It keeps previous releases and restores the previous config and symlink if the Nginx test or reload fails. It never deletes other websites or changes their configuration.
+The installer creates versioned releases in `/var/www/wedding-invitation/releases`, switches a `current` symlink, tests that its config is actually loaded, then reloads Nginx. It retries the local domain readiness check up to 15 times and verifies the release identity before declaring success. It keeps previous releases and restores the previous config and symlink if validation, reload, or readiness fails. It never deletes other websites or changes their configuration.
 
 ## Assets
 
