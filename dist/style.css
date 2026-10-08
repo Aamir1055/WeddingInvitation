@@ -74,3 +74,8 @@
 /* Keep the full names comfortably inside the floral frame. */
 .couple h1{font-size:clamp(48px,7vw,100px)}
 @media(max-width:600px){.couple{width:100%;padding:0 25px}.couple h1{font-size:clamp(40px,10.8vw,62px);line-height:1.2}.ending .signature{font-size:32px;line-height:1.5}}
+
+/* A still floral frame remains visible when mobile video playback is unavailable. */
+.hero{height:100vh;height:100svh;background:#d8c8b1 url('assets/welcome.jpg') center / cover no-repeat}
+.hero video{opacity:0;pointer-events:none}
+.hero video.has-frame{opacity:1}

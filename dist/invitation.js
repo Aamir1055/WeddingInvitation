@@ -15,17 +15,38 @@ $('time').textContent = `${time} - ${endTime}`;
 $('venue-name').textContent = wedding.venue;
 $('venue-address').textContent = wedding.address;
 $('venue-date').textContent = `${fmt({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${time} - ${endTime} (IST)`;
-const video = $('opening'); let opened = false;
+const video = $('opening'); let opened = false, openingTimer, videoFailed = false;
 function showNames() { $('couple').classList.add('visible'); $('couple').setAttribute('aria-hidden', 'false'); $('scroll').hidden = false; }
-$('open').addEventListener('click', async () => {
+function useOpeningFallback() {
+  videoFailed = true;
+  clearTimeout(openingTimer);
+  video.classList.remove('has-frame');
+  video.pause();
+  if (opened) showNames();
+}
+// Keep the floral background visible until playback has actually advanced.
+video.addEventListener('timeupdate', () => {
+  if (!videoFailed && video.currentTime > 0) video.classList.add('has-frame');
+});
+$('open').addEventListener('click', () => {
   if (opened) return; opened = true;
   $('open').classList.add('opened'); $('open').disabled = true;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) { if (Number.isFinite(video.duration)) video.currentTime = Math.max(0, video.duration - .1); showNames(); }
-  else { try { await video.play(); } catch { showNames(); } setTimeout(showNames, 6000); }
+  if (reduced || videoFailed || video.error) { useOpeningFallback(); return; }
+  // Start the escape timer before play(): its promise can remain pending.
+  openingTimer = setTimeout(() => {
+    if (video.currentTime === 0 || video.readyState < 2) useOpeningFallback();
+    else showNames();
+  }, 6000);
+  video.muted = true;
+  try {
+    const playback = video.play();
+    if (playback) playback.catch(useOpeningFallback);
+  } catch { useOpeningFallback(); }
 });
-video.addEventListener('ended', showNames);
-video.addEventListener('error', () => { video.style.display = 'none'; document.querySelector('.hero').style.background = "url('assets/welcome.jpg') center / cover"; if (opened) showNames(); });
+video.addEventListener('ended', () => { clearTimeout(openingTimer); showNames(); });
+video.addEventListener('error', useOpeningFallback);
+if (video.error) useOpeningFallback();
 const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('in'); observer.unobserve(entry.target); } }), { threshold: .12 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 function tick() { let remaining = Math.max(0, date.getTime() - Date.now()); const values = [Math.floor(remaining / 86400000), Math.floor(remaining / 3600000) % 24, Math.floor(remaining / 60000) % 60, Math.floor(remaining / 1000) % 60]; ['days','hours','minutes','seconds'].forEach((id,i) => $(id).textContent = String(values[i]).padStart(2,'0')); if (!remaining) $('countdown-caption').textContent = 'The celebration has begun'; }
